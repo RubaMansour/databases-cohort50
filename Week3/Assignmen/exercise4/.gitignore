@@ -1,1 +1,7 @@
+
 .env
+*.tgz
+*.tar.gz
+*.iso
+*.zip
+mongosh-2.0.0-linux-x64/*
