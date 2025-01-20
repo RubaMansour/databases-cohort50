@@ -8,39 +8,48 @@ const connection = await createConnection({
 });
 
 try {
-  await connection.beginTransaction();
+await connection.beginTransaction();
 
-const reduceBalanceQuery = `
-    UPDATE account
-    SET balance = balance - 1000
-    WHERE account_number = 1;
+  const checkBalanceQuery = `
+    SELECT balance FROM account WHERE account_number = 1;
   `;
+  const [result] = await connection.query(checkBalanceQuery);
+  const balance = result[0].balance;
 
-const addAmountQuery = `
-    UPDATE account
-    SET balance = balance + 1000
-    WHERE account_number = 2;
-  `;
+  if (balance >= 1000) {
+    const reduceBalanceQuery = `
+      UPDATE account
+      SET balance = balance - 1000
+      WHERE account_number = 1;
+    `;
+
+    const addAmountQuery = `
+      UPDATE account
+      SET balance = balance + 1000
+      WHERE account_number = 2;
+    `;
 
 const logChangeQuery = `
-    INSERT INTO account_changes (account_number, amount, changed_date, remark)
-    VALUES
-    (1, -1000, NOW(), 'Transfer to account 2'),
-    (2, 1000, NOW(), 'Transfer from account 1');
-  `;
+      INSERT INTO account_changes (account_number, amount, changed_date, remark)
+      VALUES
+      (1, -1000, NOW(), 'Transfer to account 2'),
+      (2, 1000, NOW(), 'Transfer from account 1');
+    `;
 
+    await connection.query(reduceBalanceQuery);
+    await connection.query(addAmountQuery);
+    await connection.query(logChangeQuery);
 
-  await connection.query(reduceBalanceQuery);
-  await connection.query(addAmountQuery);
-  await connection.query(logChangeQuery);
+    await connection.commit();
+    console.log("Transaction completed successfully.");
+  } else {
+    console.log("Insufficient balance in account 1.");
+    await connection.rollback();
+  }
 
-await connection.commit();
-
-  console.log("Transaction completed successfully.");
-} catch (err) {
+}catch (err) {
   await connection.rollback();
   console.error("Transaction failed, rolled back:", err.message);
 } finally {
   await connection.end();
 }
-

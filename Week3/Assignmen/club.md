@@ -37,9 +37,8 @@
 # Name all the tables and columns that would make a 3NF compliant solution.
       . Members => member_id, member_name, member_addres
       . Member_Dinner => member_id, dinner_id
-      . Dinners => dinner_id, dinner_dat
+      . Dinners => dinner_id, dinner_dat,venue_code
       . Venues => venue_code, venue_description
       . Foods => food_code, food_descriptio
-      . Dinner_Venue => dinner_id, venue_cod
       . Dinner_Food => dinner_id, food_code
      

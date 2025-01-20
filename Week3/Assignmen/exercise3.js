@@ -1,11 +1,17 @@
 function getPopulation(Country, name, code, cb) {
+  const query = `SELECT Population FROM ?? WHERE Name = ? AND code = ?`;
   
-  const query = `SELECT Population FROM ?? WHERE Name = ? and code = ?`;
-  const values = [Country, name, code];
+  conn.query(query, [Country, name, code], function (err, result) {
+    if (err) {
+      cb(err);
+      return;
+    }
 
-  conn.query(query, values, (err, result) => {
-    if (err) return cb(err);
-    if (result.length === 0) return cb(new Error("Not found"));
+    if (result.length == 0) {
+      cb(new Error("Not found"));
+      return;
+    }
+
     cb(null, result[0].Population);
   });
 }
