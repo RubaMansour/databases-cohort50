@@ -1,6 +1,5 @@
-
 const { MongoClient } = require('mongodb');
-require("dotenv").config();
+require("dotenv").config({ path: '../.env' });
 
 const uri =process.env.MONGODB_URL;
 
@@ -11,47 +10,41 @@ async function getPopulationByContinent(year, ageGroup) {
     await client.connect();
     console.log("Connected to MongoDB Atlas");
 
-    const db = client.db('population_data');
-    const collection = db.collection('country_population');
-
-    const pipeline = [
-      { $match: { Year: year, Age: ageGroup } },        {
-        $group: {
-          _id: "$Country",  
-          Year: { $first: "$Year" },
-          Age: { $first: "$Age" },
-          M: { $sum: "$M" },  
-          F: { $sum: "$F" }   
+    const db = client.db('population_data'); 
+    const collection = db.collection('country_population'); 
+    
+    const continents = [
+            'AFRICA',
+            'ASIA',
+            'EUROPE',
+            'LATIN AMERICA AND THE CARIBBEAN',
+            'NORTHERN AMERICA',
+            'OCEANIA'
+        ];
+const result = await collection.aggregate([
+{
+        $match: {
+          Year: year,
+          Age:  ageGroup,
+          Country: { $in: continents } 
         }
       },
+      {
+        $addFields: {
+          TotalPopulation: { $add: ['$M', '$F'] } // إضافة مجموع السكان
+        }
+      }
+    ]).toArray();
 
-{
-        $project: {
-          _id: 1,
-          Country: "$_id",
-          Year: 1,
-          Age: 1,
-          M: 1,
-          F: 1,
-          TotalPopulation: { $add: ["$M", "$F"] }  }
-      },
-      { $sort: { Country: 1 } }  
-    ];
-
-
-
-const result = await collection.aggregate(pipeline).toArray();
+console.log(result);
     return result;
-  } catch (error) {
-    console.error("Error:", error);
+
+  } catch (err) {
+    console.error('Error:', err);
+    return [];
   } finally {
     await client.close();
   }
 }
 
-(async () => {
-  const year = 2020;
-  const ageGroup = "100+";  
-  const populationData = await getPopulationByContinent(year, ageGroup);
-  console.log(populationData);
-})();
+getPopulationByContinent(2020, "100+");
