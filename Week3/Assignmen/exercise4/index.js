@@ -66,18 +66,13 @@ async function updateEpisodeExercises(client) {
     `Ran a command to update episode 13 in season 30 and it updated ${updateTitleResult.modifiedCount} episodes`
   );
 
-  const updatedBushes = await collection.updateMany(
-    { elements: "BUSHES" },
-    { $pull: { elements: "BUSHES" } }
-  );
-  console.log(`Ran a command to remove all BUSHES and it updated ${updatedBushes.modifiedCount} episodes`);
-
-const addBushResult = await collection.updateMany(
-    { elements: { $in: ["BUSHES"] } },
-    { $addToSet: { elements: "BUSH" } }
-  );
-  console.log(`Ran a command to add 'BUSH' and it updated ${addBushResult.modifiedCount} episodes`);
-}
+const updatedBushes = await collection.updateMany(
+  
+   { elements: "BUSHES" }, 
+   { $set: { "elements.$": "BUSH" } } 
+);
+  console.log(`Ran a command to update all the BUSHES to BUSH and it updated ${updatedBushes.modifiedCount} episodes`);
+ }
 
 async function deleteEpisodeExercise(client) {
   const collection = client.db("databaseWeek3").collection("bob_ross_episodes");
