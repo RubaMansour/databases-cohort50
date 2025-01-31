@@ -30,38 +30,40 @@ async function transfer(fromAccount, toAccount, amount, remark) {
      const updatedToBalance = toAccountB.balance + amount;
      const fromChangeNumber = fromAccountA.account_changes.length + 1;
      const toChangeNumber = toAccountB.account_changes.length + 1;
+     const session = client.startSession();
 
+   await session.withTransaction(async () => {
     await accountsCollection.updateOne(
-        { account_number: fromAccount },
-        {
-          $set: { balance: updatedFromBalance },
-          $push: {
-            account_changes: {
-              change_number: fromChangeNumber,
-              amount: -amount,
-              changed_date: new Date(),
-              remark
-            }
+      { account_number: fromAccount },
+      {
+        $set: { balance: updatedFromBalance },
+        $push: {
+          account_changes: {
+            change_number: fromChangeNumber,
+            amount: -amount,
+            changed_date: new Date(),
+            remark
           }
-        },
-        
-      );
-
-  await accountsCollection.updateOne(
-        { account_number: toAccount },
-        {
-          $set: { balance: updatedToBalance },
-          $push: {
-            account_changes: {
-              change_number: toChangeNumber,
-              amount: amount,
-              changed_date: new Date(),
-              remark
-            }
+        }
+      },
+      { session }  
+    );
+   await accountsCollection.updateOne(
+      { account_number: toAccount },
+      {
+        $set: { balance: updatedToBalance },
+        $push: {
+          account_changes: {
+            change_number: toChangeNumber,
+            amount: amount,
+            changed_date: new Date(),
+            remark
           }
-        },
-        
-      );
+        }
+      },
+      { session }  
+    );
+  });
 
 await session.commitTransaction();
       console.log(`Successfully transferred $${amount} from account ${fromAccount} to account ${toAccount}.`);
